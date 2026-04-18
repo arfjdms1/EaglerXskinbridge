@@ -1,3 +1,5 @@
+import org.gradle.api.attributes.java.TargetJvmVersion
+
 plugins {
     kotlin("jvm") version "1.9.22"
     id("com.github.johnrengelman.shadow") version "8.1.1"
@@ -6,17 +8,48 @@ plugins {
 group = "mc.arch.skin.bridge"
 version = "1.0-SNAPSHOT"
 
+configurations.all {
+    attributes {
+        attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 25)
+    }
+}
+
 repositories {
-    mavenCentral()
+    mavenLocal()
+    mavenCentral() {
+        metadataSources {
+            mavenPom()
+            artifact()
+        }
+    }
+    maven("https://repo.papermc.io/repository/maven-public/") {
+        metadataSources {
+            mavenPom()
+            artifact()
+        }
+    }
+    maven("https://repo.lax1dude.net/repository/releases/") {
+        metadataSources {
+            mavenPom()
+            artifact()
+        }
+    }
+    maven("https://repo.codemc.io/repository/maven-public/") {
+        metadataSources {
+            mavenPom()
+            artifact()
+        }
+    }
 }
 
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation("redis.clients:jedis:5.1.0")
+    compileOnly("com.velocitypowered:velocity-api:3.3.0-SNAPSHOT")
+    compileOnly("net.lax1dude.eaglercraft.backend:api-velocity:1.0.1")
+    compileOnly("net.skinsrestorer:skinsrestorer-api:15.12.0")
+    implementation("com.moandjiezana.toml:toml4j:0.7.2")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.code.gson:gson:2.10.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    implementation("com.moandjiezana.toml:toml4j:0.7.2")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
