@@ -39,11 +39,14 @@ class SkinBridgePlugin @Inject constructor(
         
         val playerId = event.loginConnection.uniqueId
         val username = event.loginConnection.username
+        
+        val isSlim = skin.customSkinModelId?.name == "ALEX"
+        val variant = if (isSlim) "slim" else "classic"
 
         server.scheduler.buildTask(this, Runnable {
             try {
                 val base64Data = Base64.getEncoder().encodeToString(rawBytes)
-                val result = agent.convertAndUploadToMineSkin(base64Data).join()
+                val result = agent.convertAndUploadToMineSkin(base64Data, variant).join()
                 
                 if (result.error == null && result.textureValue != null && result.textureSignature != null) {
                     val skinsRestorer = SkinsRestorerProvider.get()

@@ -26,6 +26,7 @@ class SkinConversionAgent(
 {
     fun convertAndUploadToMineSkin(
         base64Data: String,
+        variant: String = "classic",
         visibility: String = "public",
         width: Int = config.defaultWidth,
         height: Int = config.defaultHeight
@@ -47,7 +48,7 @@ class SkinConversionAgent(
                 val pngData = getOrCreatePng(hash, base64Data, width, height)
                     ?: throw RuntimeException("Failed to convert ABGR8 to PNG")
 
-                val uploadResult = uploadToMineSkin(hash, pngData, visibility)
+                val uploadResult = uploadToMineSkin(hash, pngData, variant, visibility)
 
                 if (config.cacheEnabled && uploadResult.error == null)
                 {
@@ -91,7 +92,7 @@ class SkinConversionAgent(
         return pngData
     }
 
-    private fun uploadToMineSkin(hash: String, pngData: ByteArray, visibility: String): SkinUploadResult
+    private fun uploadToMineSkin(hash: String, pngData: ByteArray, variant: String, visibility: String): SkinUploadResult
     {
         val multipartBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
@@ -102,6 +103,7 @@ class SkinConversionAgent(
             )
             .addFormDataPart("name", "archmc-${hash.take(7)}")
             .addFormDataPart("visibility", visibility)
+            .addFormDataPart("variant", variant)
             .build()
 
         val requestBuilder = Request.Builder()
