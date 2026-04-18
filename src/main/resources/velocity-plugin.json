@@ -1,6 +1,6 @@
 {
-  "id": "archoss-skinbridge",
-  "name": "Archoss SkinBridge",
+  "id": "eaglerxskinbridge",
+  "name": "EaglerXskinbridge",
   "version": "1.0-SNAPSHOT",
   "description": "Bridges Eaglercraft skins to SkinsRestorer.",
   "authors": [

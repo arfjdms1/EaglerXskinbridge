@@ -7,7 +7,7 @@ import com.velocitypowered.api.plugin.Dependency
 import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.Player
-import net.lax1dude.eaglercraft.backend.api.velocity.EaglercraftSkinUploadEvent
+import net.lax1dude.eaglercraft.backend.server.api.velocity.event.EaglercraftRegisterSkinEvent
 import net.skinsrestorer.api.SkinsRestorerProvider
 import net.skinsrestorer.api.property.SkinProperty
 import net.skinsrestorer.api.property.SkinIdentifier
@@ -16,7 +16,7 @@ import java.nio.file.Path
 import java.util.Base64
 import mc.arch.skin.bridge.cache.MemoryCacheProvider
 
-@Plugin(id = "archoss-skinbridge", dependencies = [Dependency(id = "eaglerxserver"), Dependency(id = "skinsrestorer")])
+@Plugin(id = "eaglerxskinbridge", dependencies = [Dependency(id = "eaglerxserver"), Dependency(id = "skinsrestorer")])
 class SkinBridgePlugin @Inject constructor(
     private val server: ProxyServer,
     private val logger: Logger,
@@ -26,10 +26,20 @@ class SkinBridgePlugin @Inject constructor(
     private val agent: SkinConversionAgent = SkinConversionAgent(config, MemoryCacheProvider())
 
     @Subscribe
-    fun onSkinUpload(event: EaglercraftSkinUploadEvent) {
-        val player = event.getPlayer()
-        val rawBytes = event.getRawSkin()
+    fun onSkinUpload(event: EaglercraftRegisterSkinEvent) {
+        val skin = event.eaglerSkin
+        if (!skin.isSkinCustom) {
+            return
+        }
+
+        val rawBytes = skin.customSkinPixels_ABGR8_64x64
+        if (rawBytes == null) {
+            return
+        }
         
+        val playerId = event.loginConnection.uniqueId
+        val username = event.loginConnection.username
+
         server.scheduler.buildTask(this, Runnable {
             try {
                 val base64Data = Base64.getEncoder().encodeToString(rawBytes)
@@ -39,18 +49,23 @@ class SkinBridgePlugin @Inject constructor(
                     val skinsRestorer = SkinsRestorerProvider.get()
                     val property = SkinProperty.of(result.textureValue, result.textureSignature)
                     
-                    val skinId = result.skinUuid ?: player.username
+                    val skinId = result.skinUuid ?: username
                     val skinIdentifier = SkinIdentifier.ofCustom(skinId)
                     
                     skinsRestorer.skinStorage.setCustomSkinData(skinId, property)
-                    skinsRestorer.playerStorage.setSkinIdOfPlayer(player.uniqueId, skinIdentifier)
+                    skinsRestorer.playerStorage.setSkinIdOfPlayer(playerId, skinIdentifier)
                     
-                    skinsRestorer.getSkinApplier(Player::class.java).applySkin(player)
+                    val player = server.getPlayer(playerId).orElse(null)
+                    if (player != null) {
+                        skinsRestorer.getSkinApplier(Player::class.java).applySkin(player)
+                    }
+                    
+                    logger.info("[EaglerXskinbridge] Successfully mapped custom skin for player {}", username)
                 } else {
-                    logger.error("Skin upload failed: {}", result.error)
+                    logger.error("[EaglerXskinbridge] Skin upload failed for {}: {}", username, result.error)
                 }
             } catch (e: Exception) {
-                logger.error("Error processing skin", e)
+                logger.error("[EaglerXskinbridge] Error processing skin for {}", username, e)
             }
         }).schedule()
     }

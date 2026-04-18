@@ -8,6 +8,10 @@ plugins {
 group = "mc.arch.skin.bridge"
 version = "1.0-SNAPSHOT"
 
+base {
+    archivesName.set("EaglerXskinbridge")
+}
+
 configurations.all {
     attributes {
         attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 25)
@@ -45,7 +49,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
     compileOnly("com.velocitypowered:velocity-api:3.3.0-SNAPSHOT")
-    compileOnly("net.lax1dude.eaglercraft.backend:api-velocity:1.0.1")
+    compileOnly(files("lib/EaglerXServer.jar"))
     compileOnly("net.skinsrestorer:skinsrestorer-api:15.12.0")
     implementation("com.moandjiezana.toml:toml4j:0.7.2")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
