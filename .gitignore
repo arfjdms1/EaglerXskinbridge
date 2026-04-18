@@ -17,5 +17,31 @@ gradle-app.setting
 # Eclipse Gradle plugin generated files
 # Eclipse Core
 .project
+<<<<<<< HEAD
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+=======
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
+
+### Local Runtime ###
+.codex
+config.toml
+>>>>>>> b7ce7b5 (Strip private framework and add TOML config)
