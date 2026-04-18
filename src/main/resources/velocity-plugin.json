@@ -1,0 +1,20 @@
+{
+  "id": "archoss-skinbridge",
+  "name": "Archoss SkinBridge",
+  "version": "1.0-SNAPSHOT",
+  "description": "Bridges Eaglercraft skins to SkinsRestorer.",
+  "authors": [
+    "Archoss"
+  ],
+  "dependencies": [
+    {
+      "id": "eaglerxserver",
+      "optional": false
+    },
+    {
+      "id": "skinsrestorer",
+      "optional": false
+    }
+  ],
+  "main": "mc.arch.skin.bridge.SkinBridgePlugin"
+}
