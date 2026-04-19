@@ -75,6 +75,57 @@ class SkinConversionAgent(
         }
     }
 
+    fun uploadPresetToMineSkin(
+        presetId: Int,
+        variant: String = "classic",
+        visibility: String = "public"
+    ): CompletableFuture<SkinUploadResult> {
+        return CompletableFuture.supplyAsync {
+            try {
+                if (presetId < 0 || presetId > 23) {
+                    return@supplyAsync SkinUploadResult(null, null, null, "Preset skin ID $presetId not supported via MineSkin")
+                }
+                val hash = "preset_$presetId"
+                getCachedSkinResponse(hash)?.let { cachedSkin ->
+                    return@supplyAsync SkinUploadResult(
+                        textureValue = cachedSkin.skinValue,
+                        textureSignature = cachedSkin.skinSignature,
+                        skinUuid = hash,
+                        error = null
+                    )
+                }
+
+                val resourceStream = javaClass.getResourceAsStream("/presets/$presetId.png")
+                if (resourceStream == null) {
+                    return@supplyAsync SkinUploadResult(null, null, null, "Preset PNG not found in resources")
+                }
+
+                val pngData = resourceStream.readBytes()
+                val uploadResult = uploadToMineSkin(hash, pngData, variant, visibility)
+
+                if (config.cacheEnabled && uploadResult.error == null) {
+                    cacheSkinResponse(
+                        skinHash = hash,
+                        textureValue = uploadResult.textureValue ?: error("Missing texture value"),
+                        textureSignature = uploadResult.textureSignature ?: error("Missing texture signature")
+                    )
+                }
+
+                uploadResult
+            } catch (exception: Exception) {
+                println("Error during MineSkin preset upload: ${exception.message}")
+                exception.printStackTrace()
+
+                SkinUploadResult(
+                    textureValue = null,
+                    textureSignature = null,
+                    skinUuid = null,
+                    error = exception.message ?: "Unknown error"
+                )
+            }
+        }
+    }
+
     private fun getOrCreatePng(hash: String, base64Data: String, width: Int, height: Int): ByteArray?
     {
         if (config.cacheEnabled)

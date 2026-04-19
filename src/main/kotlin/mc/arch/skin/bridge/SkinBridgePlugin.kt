@@ -42,8 +42,46 @@ class SkinBridgePlugin @Inject constructor(
         
         logger.info("[EaglerXskinbridge] Player {} skin details -> isCustom: {}, isPreset: {}", username, skin.isSkinCustom, skin.isSkinPreset)
 
+        if (skin.isSkinPreset) {
+            val presetId = skin.presetSkinId
+            val enumSkin = skin.presetSkin
+            val presetName = enumSkin?.name ?: "UNKNOWN"
+            val variant = if (presetName.contains("ALEX")) "slim" else "classic"
+            
+            logger.info("[EaglerXskinbridge] Player {} is using preset skin {} (ID: {}). Uploading to MineSkin...", username, presetName, presetId)
+
+            server.scheduler.buildTask(this, Runnable {
+                try {
+                    val result = agent.uploadPresetToMineSkin(presetId, variant).join()
+                    
+                    if (result.error == null && result.textureValue != null && result.textureSignature != null) {
+                        val skinsRestorer = SkinsRestorerProvider.get()
+                        val property = SkinProperty.of(result.textureValue, result.textureSignature)
+                        
+                        val skinId = "preset_$presetId"
+                        val skinIdentifier = SkinIdentifier.ofCustom(skinId)
+                        
+                        skinsRestorer.skinStorage.setCustomSkinData(skinId, property)
+                        skinsRestorer.playerStorage.setSkinIdOfPlayer(playerId, skinIdentifier)
+                        
+                        val player = server.getPlayer(playerId).orElse(null)
+                        if (player != null) {
+                            skinsRestorer.getSkinApplier(Player::class.java).applySkin(player)
+                        }
+                        
+                        logger.info("[EaglerXskinbridge] Successfully mapped preset skin for player {}", username)
+                    } else {
+                        logger.error("[EaglerXskinbridge] Preset skin upload failed for {}: {}", username, result.error)
+                    }
+                } catch (e: Exception) {
+                    logger.error("[EaglerXskinbridge] Error processing preset skin for {}", username, e)
+                }
+            }).schedule()
+            return
+        }
+
         if (!skin.isSkinCustom) {
-            logger.info("[EaglerXskinbridge] Player {} is using a preset or default skin. Skipping MineSkin upload.", username)
+            logger.info("[EaglerXskinbridge] Player {} is using a default skin that is neither preset nor custom. Skipping MineSkin upload.", username)
             return
         }
 
