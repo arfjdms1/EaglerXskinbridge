@@ -36,7 +36,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EaglerXskinbridge-0.1-BETA
-          path: build/libs/EaglerXskinbridge-0.1-BETA.jar
+          path: build/libs/*.jar
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -56,6 +56,6 @@ jobs:
             * Velocity 3.3.0+
             * SkinsRestorer v15+
             * EaglercraftXServer (Velocity)
-          files: build/libs/EaglerXskinbridge-0.1-BETA.jar
+          files: build/libs/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
