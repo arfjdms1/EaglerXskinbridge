@@ -2,6 +2,7 @@ package mc.arch.skin.bridge
 
 import com.google.inject.Inject
 import com.velocitypowered.api.event.Subscribe
+import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.plugin.Dependency
 import com.velocitypowered.api.plugin.annotation.DataDirectory
@@ -26,22 +27,36 @@ class SkinBridgePlugin @Inject constructor(
     private val agent: SkinConversionAgent = SkinConversionAgent(config, MemoryCacheProvider())
 
     @Subscribe
+    fun onProxyInitialization(event: ProxyInitializeEvent) {
+        logger.info("[EaglerXskinbridge] Plugin successfully initialized and listening for Eaglercraft skins!")
+    }
+
+    @Subscribe
     fun onSkinUpload(event: EaglercraftRegisterSkinEvent) {
+        val playerId = event.loginConnection.uniqueId
+        val username = event.loginConnection.username
+        
+        logger.info("[EaglerXskinbridge] EaglercraftRegisterSkinEvent fired for player: {}", username)
+
         val skin = event.eaglerSkin
+        
+        logger.info("[EaglerXskinbridge] Player {} skin details -> isCustom: {}, isPreset: {}", username, skin.isSkinCustom, skin.isSkinPreset)
+
         if (!skin.isSkinCustom) {
+            logger.info("[EaglerXskinbridge] Player {} is using a preset or default skin. Skipping MineSkin upload.", username)
             return
         }
 
         val rawBytes = skin.customSkinPixels_ABGR8_64x64
         if (rawBytes == null) {
+            logger.warn("[EaglerXskinbridge] Player {} has a custom skin but the raw bytes are null!", username)
             return
         }
         
-        val playerId = event.loginConnection.uniqueId
-        val username = event.loginConnection.username
-        
         val isSlim = skin.customSkinModelId?.name == "ALEX"
         val variant = if (isSlim) "slim" else "classic"
+        
+        logger.info("[EaglerXskinbridge] Player {} has a custom {} skin! Uploading to MineSkin...", username, variant)
 
         server.scheduler.buildTask(this, Runnable {
             try {
