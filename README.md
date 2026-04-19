@@ -1,4 +1,4 @@
-# EaglerXskinbridge 🌉
+# EaglerXskinbridge 
 
 ![Velocity](https://img.shields.io/badge/Velocity-3.3.0+-blue.svg)
 ![Java](https://img.shields.io/badge/Java-17+-orange.svg)
@@ -11,7 +11,7 @@ Historically, Java Edition players would only see Eaglercraft players as default
 
 If you run an Eaglercraft network alongside Java players, this plugin bridges the visual gap.
 
-## ✨ Features
+## Features
 
 * **Direct-Hook Architecture:** No Redis, no external Python workers, no databases required. Everything happens natively in the Velocity proxy memory.
 * **Custom Skin Support:** Intercepts the `EaglercraftRegisterSkinEvent`, extracts the raw `ABGR8` bytes sent by the Eaglercraft client, and reconstructs them into valid PNGs.
@@ -20,7 +20,7 @@ If you run an Eaglercraft network alongside Java players, this plugin bridges th
 * **Aggressive RAM Caching:** Prevents MineSkin rate-limits by locally hashing and caching signed skin data. If 100 players log in with the "Developer Steve" skin, the API is only queried *once*.
 * **SkinsRestorer v15 Native:** Uses the modern v15 API (`SkinStorage`, `PlayerStorage`, `SkinApplier`) to instantly refresh player skins across the proxy.
 
-## 📦 Prerequisites
+## Prerequisites
 
 Ensure your proxy server meets the following requirements:
 * **Proxy:** Velocity 3.3.0+
@@ -28,7 +28,7 @@ Ensure your proxy server meets the following requirements:
 * **Required Plugin 1:** [EaglercraftXServer](https://modrinth.com/plugin/eaglercraftxserver) (Velocity version)
 * **Required Plugin 2:** [SkinsRestorer](https://skinsrestorer.net/) (v15.0.0 or higher)
 
-## 🚀 Installation & Setup
+## Installation & Setup
 
 1. **Download or Build the Plugin:**
    Grab the latest `.jar` from the Releases tab, or build it yourself from source (see below).
@@ -44,7 +44,7 @@ Ensure your proxy server meets the following requirements:
 5. **Restart Again:**
    Restart Velocity to apply the API key. You are done!
 
-## ⚙️ Configuration (`config.toml`)
+## Configuration (`config.toml`)
 
 ```toml
 [mineskin]
@@ -71,7 +71,7 @@ png_cache_ttl_minutes = 10080
 fallback_hash_enabled = true
 ```
 
-## 🛠️ Building from Source
+## Building from Source
 
 To compile the plugin yourself, clone the repository and run the Gradle shadowJar task:
 
@@ -83,7 +83,7 @@ cd EaglerXskinbridge
 
 The compiled plugin will be located at `build/libs/EaglerXskinbridge-1.0-SNAPSHOT.jar`.
 
-## 🤝 Contributing
+## Contributing
 
 Contributions, issues, and feature requests are welcome! Since Eaglercraft and SkinsRestorer are constantly evolving, community support is appreciated.
 
@@ -92,6 +92,6 @@ Contributions, issues, and feature requests are welcome! Since Eaglercraft and S
 * Cape synchronization bridge.
 * Persistent database caching (MySQL/SQLite) instead of strictly in-memory.
 
-## 📝 License
+## License
 
 This project is open-source and available under standard open-source licenses. Feel free to fork, modify, and use it on your network!
