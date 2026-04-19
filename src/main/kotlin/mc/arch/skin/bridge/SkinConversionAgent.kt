@@ -75,6 +75,30 @@ class SkinConversionAgent(
         }
     }
 
+    fun preloadSignedPresets() {
+        try {
+            val resourceStream = javaClass.getResourceAsStream("/signed_presets.json")
+            if (resourceStream != null) {
+                val jsonString = String(resourceStream.readBytes(), Charsets.UTF_8)
+                val jsonObject = gson.fromJson(jsonString, JsonObject::class.java)
+                
+                jsonObject.entrySet().forEach { (id, element) ->
+                    val presetObj = element.asJsonObject
+                    val value = presetObj.get("value")?.asString
+                    val sig = presetObj.get("signature")?.asString
+                    
+                    if (!value.isNullOrBlank() && !sig.isNullOrBlank()) {
+                        val hash = "preset_$id"
+                        cacheSkinResponse(hash, value, sig, null)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            println("Failed to preload signed presets: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+
     fun uploadPresetToMineSkin(
         presetId: Int,
         variant: String = "classic",
@@ -107,7 +131,8 @@ class SkinConversionAgent(
                     cacheSkinResponse(
                         skinHash = hash,
                         textureValue = uploadResult.textureValue ?: error("Missing texture value"),
-                        textureSignature = uploadResult.textureSignature ?: error("Missing texture signature")
+                        textureSignature = uploadResult.textureSignature ?: error("Missing texture signature"),
+                        ttlMinutes = null // permanent cache for presets
                     )
                 }
 
@@ -269,7 +294,7 @@ class SkinConversionAgent(
         return null
     }
 
-    private fun cacheSkinResponse(skinHash: String, textureValue: String, textureSignature: String)
+    private fun cacheSkinResponse(skinHash: String, textureValue: String, textureSignature: String, ttlMinutes: Long? = config.skinCacheTtlMinutes)
     {
         val jsonData = gson.toJson(
             CachedSkin(
@@ -277,7 +302,7 @@ class SkinConversionAgent(
                 textureSignature
             )
         )
-        cacheProvider.put(CacheKey.SKIN, skinHash, jsonData.toByteArray(Charsets.UTF_8), config.skinCacheTtlMinutes)
+        cacheProvider.put(CacheKey.SKIN, skinHash, jsonData.toByteArray(Charsets.UTF_8), ttlMinutes)
     }
 
     fun getCachedSkinResponse(skinHash: String): CachedSkin?

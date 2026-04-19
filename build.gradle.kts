@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "mc.arch.skin.bridge"
-version = "1.0-SNAPSHOT"
+version = "0.1 BETA"
 
 base {
     archivesName.set("EaglerXskinbridge")

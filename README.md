@@ -15,9 +15,10 @@ If you run an Eaglercraft network alongside Java players, this plugin bridges th
 
 * **Direct-Hook Architecture:** No Redis, no external Python workers, no databases required. Everything happens natively in the Velocity proxy memory.
 * **Custom Skin Support:** Intercepts the `EaglercraftRegisterSkinEvent`, extracts the raw `ABGR8` bytes sent by the Eaglercraft client, and reconstructs them into valid PNGs.
-* **Preset Skin Support:** Fully supports all 24 Eaglercraft built-in preset skins (e.g., Developer Steve, Tennis Alex, Zombie, Notch) by embedding high-quality PNGs directly into the JAR.
+* **Preset Skin Support:** Fully supports all 24 Eaglercraft built-in preset skins (e.g., Developer Steve, Tennis Alex, Zombie) by embedding pre-signed MineSkin JSON signature payloads directly into the JAR, completely bypassing API rate-limits.
+* **Two-Way Synchronization:** Hooks into SkinsRestorer's `SkinApplyEvent`. If an Eaglercraft player natively changes their standard Java skin via commands, the plugin detects it and automatically flushes their forced internal EaglercraftSkin, seamlessly updating their appearance downward.
 * **Zero Main-Thread Lag:** Completely asynchronous processing. HTTP requests and byte-shifting math are offloaded to Velocity's background scheduler to ensure 0 TPS drops during login spikes.
-* **Aggressive RAM Caching:** Prevents MineSkin rate-limits by locally hashing and caching signed skin data. If 100 players log in with the "Developer Steve" skin, the API is only queried *once*.
+* **RAM Caching:** Caches API uploads strictly in memory. Never touches your disk storage, keeping the proxy incredibly lightweight.
 * **SkinsRestorer v15 Native:** Uses the modern v15 API (`SkinStorage`, `PlayerStorage`, `SkinApplier`) to instantly refresh player skins across the proxy.
 
 ## Prerequisites
@@ -33,7 +34,7 @@ Ensure your proxy server meets the following requirements:
 1. **Download or Build the Plugin:**
    Grab the latest `.jar` from the Releases tab, or build it yourself from source (see below).
 2. **Install:**
-   Drop `EaglerXskinbridge-1.0-SNAPSHOT.jar` into your Velocity `plugins/` directory alongside `SkinsRestorer` and `eaglerxserver`.
+   Drop `EaglerXskinbridge-0.1-BETA.jar` into your Velocity `plugins/` directory alongside `SkinsRestorer` and `eaglerxserver`.
 3. **Restart Proxy:**
    Start or restart your Velocity proxy. A new configuration folder will be generated at `plugins/eaglerxskinbridge/config.toml`.
 4. **Configure MineSkin API Key (CRITICAL):**
@@ -81,7 +82,7 @@ cd EaglerXskinbridge
 ./gradlew shadowJar
 ```
 
-The compiled plugin will be located at `build/libs/EaglerXskinbridge-1.0-SNAPSHOT.jar`.
+The compiled plugin will be located at `build/libs/EaglerXskinbridge-0.1-BETA.jar`.
 
 ## Contributing
 

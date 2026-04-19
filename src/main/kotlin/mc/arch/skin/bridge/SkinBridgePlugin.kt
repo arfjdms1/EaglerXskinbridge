@@ -12,6 +12,8 @@ import net.lax1dude.eaglercraft.backend.server.api.velocity.event.EaglercraftReg
 import net.skinsrestorer.api.SkinsRestorerProvider
 import net.skinsrestorer.api.property.SkinProperty
 import net.skinsrestorer.api.property.SkinIdentifier
+import net.skinsrestorer.api.event.SkinApplyEvent
+import net.lax1dude.eaglercraft.backend.server.api.velocity.EaglerXServerAPI
 import org.slf4j.Logger
 import java.nio.file.Path
 import java.util.Base64
@@ -24,11 +26,41 @@ class SkinBridgePlugin @Inject constructor(
     @DataDirectory private val dataDirectory: Path
 ) {
     private val config: SkinConversionConfig = SkinConversionConfig.fromFile(dataDirectory)
-    private val agent: SkinConversionAgent = SkinConversionAgent(config, MemoryCacheProvider())
+    private val memoryCacheProvider = MemoryCacheProvider()
+    private val agent: SkinConversionAgent = SkinConversionAgent(config, memoryCacheProvider)
 
     @Subscribe
     fun onProxyInitialization(event: ProxyInitializeEvent) {
-        logger.info("[EaglerXskinbridge] Plugin successfully initialized and listening for Eaglercraft skins!")
+        logger.info("[EaglerXskinbridge] ----------------------------------------------")
+        logger.info("[EaglerXskinbridge]     +==================+")
+        logger.info("[EaglerXskinbridge]     | EaglerXskinbridge|")
+        logger.info("[EaglerXskinbridge]     |------------------|")
+        logger.info("[EaglerXskinbridge]     |    Proxy Mode    |")
+        logger.info("[EaglerXskinbridge]     +==================+")
+        logger.info("[EaglerXskinbridge] ----------------------------------------------")
+        logger.info("[EaglerXskinbridge]     Version: 0.1 BETA")
+        logger.info("[EaglerXskinbridge]     Listening for Eaglercraft skins!")
+        logger.info("[EaglerXskinbridge] ----------------------------------------------")
+        
+        agent.preloadSignedPresets()
+        logger.info("[EaglerXskinbridge] Signed presets loaded into memory successfully.")
+
+        val skinsRestorer = SkinsRestorerProvider.get()
+        skinsRestorer.eventBus.subscribe(this, SkinApplyEvent::class.java) { event ->
+            try {
+                val player = event.getPlayer(Player::class.java)
+                if (player != null) {
+                    val eaglerPlayer = EaglerXServerAPI.instance().getPlayer(player).orElse(null)
+                    if (eaglerPlayer != null) {
+                        eaglerPlayer.skinManager.resetPlayerSkin()
+                        logger.info("[EaglerXskinbridge] Flushed custom EaglercraftSkin for {} - Reverting to Java skin...", player.username)
+                    }
+                }
+            } catch (e: Exception) {
+                // Ignore gracefully if it wasn't an Eaglercraft player or unsupported method
+            }
+        }
+        logger.info("[EaglerXskinbridge] Hooked into SkinsRestorer EventBus.")
     }
 
     @Subscribe
@@ -69,9 +101,10 @@ class SkinBridgePlugin @Inject constructor(
                             skinsRestorer.getSkinApplier(Player::class.java).applySkin(player)
                         }
                         
-                        logger.info("[EaglerXskinbridge] Successfully mapped preset skin for player {}", username)
+                        logger.info("[EaglerXskinbridge] Successfully mapped preset skin for player {} (skinId: {})", username, skinId)
                     } else {
-                        logger.error("[EaglerXskinbridge] Preset skin upload failed for {}: {}", username, result.error)
+                        logger.error("[EaglerXskinbridge] Preset skin upload failed for {}! Error details: {}", username, result.error)
+                        logger.error("[EaglerXskinbridge] Full response payload: {}", result.responseBody)
                     }
                 } catch (e: Exception) {
                     logger.error("[EaglerXskinbridge] Error processing preset skin for {}", username, e)
@@ -116,9 +149,10 @@ class SkinBridgePlugin @Inject constructor(
                         skinsRestorer.getSkinApplier(Player::class.java).applySkin(player)
                     }
                     
-                    logger.info("[EaglerXskinbridge] Successfully mapped custom skin for player {}", username)
+                    logger.info("[EaglerXskinbridge] Successfully mapped custom skin for player {} (skinId: {})", username, skinId)
                 } else {
-                    logger.error("[EaglerXskinbridge] Skin upload failed for {}: {}", username, result.error)
+                    logger.error("[EaglerXskinbridge] Custom skin upload failed for {}! Error details: {}", username, result.error)
+                    logger.error("[EaglerXskinbridge] Full response payload: {}", result.responseBody)
                 }
             } catch (e: Exception) {
                 logger.error("[EaglerXskinbridge] Error processing skin for {}", username, e)

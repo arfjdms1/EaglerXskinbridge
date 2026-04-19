@@ -2,7 +2,7 @@
 
 To maintain a clean and understandable history for **EaglerXskinbridge**, please adhere to the following versioning and commit message standards.
 
-## 📌 Versioning System (SemVer)
+## Versioning System (SemVer)
 
 We use [Semantic Versioning (SemVer)](https://semver.org/) for release versions. 
 Version numbers are formatted as **`vMAJOR.MINOR.PATCH`** (e.g., `v1.0.0`).
@@ -13,7 +13,7 @@ Version numbers are formatted as **`vMAJOR.MINOR.PATCH`** (e.g., `v1.0.0`).
 
 *Note: Append `-SNAPSHOT` to the version in `build.gradle.kts` and `velocity-plugin.json` for development builds that are not yet officially released (e.g., `1.1.0-SNAPSHOT`).*
 
-## 💬 Commit Message Convention
+## Commit Message Convention
 
 We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. This makes it easy to automatically generate changelogs and understand the project history at a glance.
 
