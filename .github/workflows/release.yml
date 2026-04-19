@@ -1,0 +1,61 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build EaglerXskinbridge
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        
+      - name: Set up Java 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+        
+      - name: Build Shadow JAR
+        run: ./gradlew shadowJar
+        
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: EaglerXskinbridge-0.1-BETA
+          path: build/libs/EaglerXskinbridge-0.1-BETA.jar
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v0.1-BETA
+          name: "BETA 0.1 - The Bridge Release"
+          body: |
+            ## EaglerXskinbridge - 0.1 BETA
+            
+            This release transforms the proxy plugin into a fully self-sufficient two-way bridge!
+            
+            1. **In-Memory JSON Caching:** Preset Eaglercraft skins are now instantly processed directly from a pre-signed RAM cache without ever hitting the internet or MineSkin API limits.
+            2. **Downward Synchronization:** Natively intercepts `SkinApplyEvent` from SkinsRestorer. If a player naturally updates their skin, the plugin securely flushes the Eaglercraft local overrides to perfectly mirror the Java display.
+            3. **Command Firewall:** Safely barricades `/skin` commands from Eaglercraft clients to protect visual consistency while completely ignoring Java players.
+            
+            **Dependencies:**
+            * Velocity 3.3.0+
+            * SkinsRestorer v15+
+            * EaglercraftXServer (Velocity)
+          files: build/libs/EaglerXskinbridge-0.1-BETA.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -3,6 +3,9 @@ package mc.arch.skin.bridge
 import com.google.inject.Inject
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
+import com.velocitypowered.api.event.command.CommandExecuteEvent
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.plugin.Dependency
 import com.velocitypowered.api.plugin.annotation.DataDirectory
@@ -17,6 +20,7 @@ import net.lax1dude.eaglercraft.backend.server.api.velocity.EaglerXServerAPI
 import org.slf4j.Logger
 import java.nio.file.Path
 import java.util.Base64
+import java.util.concurrent.ConcurrentHashMap
 import mc.arch.skin.bridge.cache.MemoryCacheProvider
 
 @Plugin(id = "eaglerxskinbridge", dependencies = [Dependency(id = "eaglerxserver"), Dependency(id = "skinsrestorer")])
@@ -28,6 +32,7 @@ class SkinBridgePlugin @Inject constructor(
     private val config: SkinConversionConfig = SkinConversionConfig.fromFile(dataDirectory)
     private val memoryCacheProvider = MemoryCacheProvider()
     private val agent: SkinConversionAgent = SkinConversionAgent(config, memoryCacheProvider)
+    private val internalSyncTasks = ConcurrentHashMap.newKeySet<java.util.UUID>()
 
     @Subscribe
     fun onProxyInitialization(event: ProxyInitializeEvent) {
@@ -50,7 +55,11 @@ class SkinBridgePlugin @Inject constructor(
             try {
                 val player = event.getPlayer(Player::class.java)
                 if (player != null) {
-                    val eaglerPlayer = EaglerXServerAPI.instance().getPlayer(player).orElse(null)
+                    if (internalSyncTasks.remove(player.uniqueId)) {
+                        return@subscribe // We triggered this update, do not reset their local custom skin!
+                    }
+
+                    val eaglerPlayer = EaglerXServerAPI.instance().getPlayer(player)
                     if (eaglerPlayer != null) {
                         eaglerPlayer.skinManager.resetPlayerSkin()
                         logger.info("[EaglerXskinbridge] Flushed custom EaglercraftSkin for {} - Reverting to Java skin...", player.username)
@@ -80,7 +89,7 @@ class SkinBridgePlugin @Inject constructor(
             val presetName = enumSkin?.name ?: "UNKNOWN"
             val variant = if (presetName.contains("ALEX")) "slim" else "classic"
             
-            logger.info("[EaglerXskinbridge] Player {} is using preset skin {} (ID: {}). Uploading to MineSkin...", username, presetName, presetId)
+            logger.info("[EaglerXskinbridge] Player {} is using preset skin {} (ID: {}). Resolving signed properties...", username, presetName, presetId)
 
             server.scheduler.buildTask(this, Runnable {
                 try {
@@ -98,6 +107,7 @@ class SkinBridgePlugin @Inject constructor(
                         
                         val player = server.getPlayer(playerId).orElse(null)
                         if (player != null) {
+                            internalSyncTasks.add(player.uniqueId)
                             skinsRestorer.getSkinApplier(Player::class.java).applySkin(player)
                         }
                         
@@ -146,6 +156,7 @@ class SkinBridgePlugin @Inject constructor(
                     
                     val player = server.getPlayer(playerId).orElse(null)
                     if (player != null) {
+                        internalSyncTasks.add(player.uniqueId)
                         skinsRestorer.getSkinApplier(Player::class.java).applySkin(player)
                     }
                     
@@ -158,5 +169,19 @@ class SkinBridgePlugin @Inject constructor(
                 logger.error("[EaglerXskinbridge] Error processing skin for {}", username, e)
             }
         }).schedule()
+    }
+
+    @Subscribe
+    fun onCommandExecute(event: CommandExecuteEvent) {
+        val player = event.commandSource as? Player ?: return
+        val commandLabel = event.command.lowercase().split(" ")[0]
+        
+        if (commandLabel == "skin" || commandLabel == "skins" || commandLabel == "sr") {
+            val eaglerPlayer = EaglerXServerAPI.instance().getPlayer(player)
+            if (eaglerPlayer != null) {
+                event.result = CommandExecuteEvent.CommandResult.denied()
+                player.sendMessage(Component.text("EaglerXSkinBridge does not support /skin yet...", NamedTextColor.RED))
+            }
+        }
     }
 }
