@@ -15,16 +15,16 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         
       - name: Set up Java 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
           
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/actions/setup-gradle@v4
         
       - name: Make gradlew executable
         run: chmod +x ./gradlew
@@ -33,7 +33,7 @@ jobs:
         run: ./gradlew shadowJar
         
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: EaglerXskinbridge-0.1-BETA
           path: build/libs/EaglerXskinbridge-0.1-BETA.jar
