@@ -15,7 +15,8 @@ data class SkinConversionConfig(
     var cacheEnabled: Boolean = true,
     var skinCacheTtlMinutes: Long = 1440 * 7,
     var pngCacheTtlMinutes: Long = 1440 * 7,
-    var fallbackHashEnabled: Boolean = true
+    var fallbackHashEnabled: Boolean = true,
+    var blockSkinCommands: Boolean = true
 ) {
     companion object {
         fun fromFile(dataDirectory: Path): SkinConversionConfig {
@@ -36,7 +37,8 @@ data class SkinConversionConfig(
                 cacheEnabled = toml.getBoolean("cache.enabled", defaults.cacheEnabled) ?: defaults.cacheEnabled,
                 skinCacheTtlMinutes = toml.getLong("cache.skin_cache_ttl_minutes", defaults.skinCacheTtlMinutes) ?: defaults.skinCacheTtlMinutes,
                 pngCacheTtlMinutes = toml.getLong("cache.png_cache_ttl_minutes", defaults.pngCacheTtlMinutes) ?: defaults.pngCacheTtlMinutes,
-                fallbackHashEnabled = toml.getBoolean("cache.fallback_hash_enabled", defaults.fallbackHashEnabled) ?: defaults.fallbackHashEnabled
+                fallbackHashEnabled = toml.getBoolean("cache.fallback_hash_enabled", defaults.fallbackHashEnabled) ?: defaults.fallbackHashEnabled,
+                blockSkinCommands = toml.getBoolean("commands.block_skin_commands", defaults.blockSkinCommands) ?: defaults.blockSkinCommands
             )
         }
 
@@ -74,6 +76,10 @@ data class SkinConversionConfig(
             png_cache_ttl_minutes = 10080
             # Preserve fallback hash behavior from the original service.
             fallback_hash_enabled = true
+            
+            [commands]
+            # Block SkinsRestorer commands for natively connected Eaglercraft players.
+            block_skin_commands = true
             """.trimIndent() + "\n"
     }
 }

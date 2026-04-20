@@ -61,8 +61,8 @@ class SkinBridgePlugin @Inject constructor(
 
                     val eaglerPlayer = EaglerXServerAPI.instance().getPlayer(player)
                     if (eaglerPlayer != null) {
-                        eaglerPlayer.skinManager.resetPlayerSkin()
-                        logger.info("[EaglerXskinbridge] Flushed custom EaglercraftSkin for {} - Reverting to Java skin...", player.username)
+                        eaglerPlayer.skinManager.resetPlayerSkin(true)
+                        logger.info("[EaglerXskinbridge] Flushed custom EaglercraftSkin for {} (Database Purged) - Reverting to Java skin...", player.username)
                     }
                 }
             } catch (e: Exception) {
@@ -173,6 +173,8 @@ class SkinBridgePlugin @Inject constructor(
 
     @Subscribe
     fun onCommandExecute(event: CommandExecuteEvent) {
+        if (!config.blockSkinCommands) return
+
         val player = event.commandSource as? Player ?: return
         val commandLabel = event.command.lowercase().split(" ")[0]
         
